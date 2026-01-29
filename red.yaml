@@ -1,0 +1,34 @@
+# red.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: red-deploy      # 디플로이먼트의 고유 이름
+  namespace: wsk25          # 리소스가 생성될 네임스페이스
+spec:
+  replicas: 2             # 유지할 포드(Pod)의 개수
+  selector:
+    matchLabels:
+      app: red          # 이 라벨을 가진 포드들을 관리함
+  template:
+    metadata:
+      labels:
+        app: red        # 생성될 포드에 부여할 라벨
+    spec:
+      serviceAccountName: jang # 포드가 사용할 권한 계정
+      nodeSelector:
+        app: wsk-eks-ng-app       # 노드 라벨이 'skills: app'인 노드에만 배포
+      containers:
+        - name: red-deploy
+          # AWS ECR에 저장된 이미지 경로 및 태그(v1.0.0)
+          image: 640107381732.dkr.ecr.ap-northeast-2.amazonaws.com/wsk1/reapp:v1.0.0
+          ports:
+            - containerPort: 8080 # 컨테이너가 사용하는 포트
+          envFrom:
+            - secretRef:
+                name: secret      # 'secret'이라는 이름의 Secret에서 환경 변수를 가져옴
+          resources:
+            requests:
+              cpu: "100m"         # 컨테이너 실행을 위한 최소 CPU 예약량
+            limits:
+              cpu: "200m"         # 컨테이너가 사용할 수 있는 최대 CPU 제한량
